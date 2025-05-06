@@ -1,214 +1,172 @@
-import tkinter as tk
-from tkinter import messagebox, scrolledtext
+# =========================
+# CALCULADORA BINARIA MANUAL CON CONVERSIÓN A DECIMAL
+# =========================
 
-# ==== FUNCIONES BINARIAS ====
+def suma_binaria_manual(a, b):
+    max_len = max(len(a), len(b))
+    a = a.zfill(max_len)
+    b = b.zfill(max_len)
+    resultado = ''
+    acarreo = '0'
+
+    print(f"\nSuma binaria: {a} + {b}")
+    for i in range(max_len - 1, -1, -1):
+        total = int(a[i]) + int(b[i]) + int(acarreo)
+        bit = str(total % 2)
+        acarreo = str(total // 2)
+        resultado = bit + resultado
+        print(f"Paso {max_len - i}: bit1={a[i]}, bit2={b[i]}, acarreo={acarreo}, resultado parcial={resultado}")
+
+    if acarreo == '1':
+        resultado = '1' + resultado
+        print(f"Acarreo final: {acarreo}, resultado final={resultado}")
+
+    return resultado.lstrip('0') or '0'
+
+
+def complemento_dos(binario):
+    invertido = ''.join('1' if bit == '0' else '0' for bit in binario)
+    print(f"\nComplemento a dos: binario original={binario}, invertido={invertido}")
+    resultado = suma_binaria_manual(invertido, '1')
+    print(f"Resultado del complemento a dos: {resultado}")
+    return resultado
+
+
+def resta_binaria_manual(a, b):
+    max_len = max(len(a), len(b))
+    a = a.zfill(max_len)
+    b = b.zfill(max_len)
+    print(f"\nResta binaria: {a} - {b}")
+    b_comp2 = complemento_dos(b)
+    suma = suma_binaria_manual(a, b_comp2)
+    if len(suma) > max_len:
+        resultado = suma[-max_len:].lstrip('0') or '0'
+    else:
+        resultado = '-' + complemento_dos(suma.zfill(max_len))
+    print(f"Resultado de la resta: {resultado}")
+    return resultado
+
+
+def multiplicacion_binaria_manual(a, b):
+    a = a.lstrip('0') or '0'
+    b = b.lstrip('0') or '0'
+    resultado = '0'
+    b_reversed = b[::-1]
+
+    print(f"\nMultiplicación binaria: {a} * {b}")
+    for i, bit in enumerate(b_reversed):
+        if bit == '1':
+            parcial = a + '0' * i
+            print(f"Paso {i + 1}: parcial={parcial}")
+            resultado = suma_binaria_manual(resultado, parcial)
+            print(f"Resultado acumulado: {resultado}")
+
+    print(f"Resultado final de la multiplicación: {resultado}")
+    return resultado
+
+
+def comparar_binarios(a, b):
+    a = a.lstrip('0') or '0'
+    b = b.lstrip('0') or '0'
+    if len(a) > len(b): return 1
+    elif len(a) < len(b): return -1
+    return 1 if a > b else (-1 if a < b else 0)
+
+
+def division_binaria_manual(dividendo, divisor):
+    if divisor == '0':
+        return 'Error: División por cero', None
+    dividendo = dividendo.lstrip('0') or '0'
+    divisor = divisor.lstrip('0') or '0'
+    cociente = ''
+    residuo = ''
+    print(f"\nDivisión binaria: {dividendo} ÷ {divisor}")
+    for bit in dividendo:
+        residuo += bit
+        residuo = residuo.lstrip('0') or '0'
+        if comparar_binarios(residuo, divisor) >= 0:
+            residuo = resta_binaria_manual(residuo, divisor)
+            cociente += '1'
+        else:
+            cociente += '0'
+        print(f"Residuo parcial: {residuo}, cociente parcial: {cociente}")
+
+    print(f"Resultado final de la división: cociente={cociente}, residuo={residuo}")
+    return cociente.lstrip('0') or '0', residuo.lstrip('0') or '0'
+
+
+def binario_a_decimal(binario):
+    decimal = 0
+    for i, bit in enumerate(binario[::-1]):
+        if bit == '1':
+            decimal += 2 ** i
+    return decimal
+
 
 def es_binario(cadena):
-    return all(d in "01" for d in cadena)
+    return all(bit in '01' for bit in cadena)
 
-def binario_a_decimal(bin_str):
-    return int(bin_str, 2)
 
-def decimal_a_binario(num):
-    return bin(num)[2:]
+def calculadora_binaria():
+    print("\n=== Calculadora de Números Binarios ===\n")
 
-def suma_binaria(a, b):
-    return decimal_a_binario(binario_a_decimal(a) + binario_a_decimal(b))
+    while True:
+        bin1 = input("Ingrese el primer número binario: ").strip()
+        if not es_binario(bin1):
+            print(" Error: Solo se permiten dígitos 0 y 1.\n")
+            continue
 
-def resta_binaria(a, b):
-    return decimal_a_binario(binario_a_decimal(a) - binario_a_decimal(b))
+        bin2 = input("Ingrese el segundo número binario: ").strip()
+        if not es_binario(bin2):
+            print(" Error: Solo se permiten dígitos 0 y 1.\n")
+            continue
 
-def multiplicacion_binaria(a, b):
-    return decimal_a_binario(binario_a_decimal(a) * binario_a_decimal(b))
+        print("\nSeleccione la operación a realizar:")
+        print("1) Suma")
+        print("2) Resta")
+        print("3) Multiplicación")
+        print("4) División")
 
-# ==== CALCULADORA BINARIA ====
+        opcion = input("Opción (1/2/3/4): ").strip()
 
-def abrir_calculadora_binaria():
-    ventana = tk.Toplevel()
-    ventana.title("Calculadora Binaria")
-    ventana.geometry("400x550")
-    ventana.configure(bg="#f0f4f8")
+        if opcion == '1':
+            resultado = suma_binaria_manual(bin1, bin2)
+            print(f" Resultado (Suma): {resultado}")
+        elif opcion == '2':
+            resultado = resta_binaria_manual(bin1, bin2)
+            print(f" Resultado (Resta): {resultado}")
+        elif opcion == '3':
+            resultado = multiplicacion_binaria_manual(bin1, bin2)
+            print(f" Resultado (Multiplicación): {resultado}")
+        elif opcion == '4':
+            cociente, residuo = division_binaria_manual(bin1, bin2)
+            if cociente == 'Error: División por cero':
+                print(" No se puede dividir entre cero.")
+                continue
+            print(f" Resultado (División): Cociente = {cociente}, Residuo = {residuo}")
+        else:
+            print(" Opción no válida. Intenta nuevamente.")
+            continue
 
-    entrada = tk.Entry(ventana, font=("Consolas", 20), justify="right", bd=8)
-    entrada.grid(row=0, column=0, columnspan=4, padx=10, pady=15, sticky="nsew")
-
-    historial = scrolledtext.ScrolledText(ventana, width=40, height=8, font=("Consolas", 12), state="disabled", bg="#ffffff")
-    historial.grid(row=4, column=0, columnspan=4, padx=10, pady=10)
-
-    def limpiar():
-        entrada.delete(0, tk.END)
-
-    def agregar_texto(texto):
-        entrada.insert(tk.END, texto)
-
-    def agregar_historial(texto):
-        historial.configure(state="normal")
-        historial.insert(tk.END, texto + "\n")
-        historial.configure(state="disabled")
-        historial.see(tk.END)
-
-    def operar():
-        texto = entrada.get()
-        try:
-            if '+' in texto:
-                a, b = texto.split('+')
-                if not es_binario(a) or not es_binario(b): raise ValueError
-                resultado = suma_binaria(a, b)
-            elif '-' in texto:
-                a, b = texto.split('-')
-                if not es_binario(a) or not es_binario(b): raise ValueError
-                resultado = resta_binaria(a, b)
-            elif '*' in texto:
-                a, b = texto.split('*')
-                if not es_binario(a) or not es_binario(b): raise ValueError
-                resultado = multiplicacion_binaria(a, b)
+        # Conversión a decimal
+        convertir = input("¿Desea ver el resultado en decimal? (si/no): ").strip().lower()
+        if convertir == 's':
+            if opcion == '4':
+                print(f"➡️ Cociente en decimal: {binario_a_decimal(cociente)}")
+                print(f"➡️ Residuo en decimal: {binario_a_decimal(residuo)}")
             else:
-                raise ValueError
-            agregar_historial(f"{texto} = {resultado}")
-            entrada.delete(0, tk.END)
-            entrada.insert(0, resultado)
-        except:
-            messagebox.showerror("Error", "Operación binaria inválida")
+                if resultado.startswith('-'):
+                    resultado_decimal = binario_a_decimal(resultado[1:])
+                    print(f"➡️ Resultado en decimal: -{resultado_decimal}")
+                else:
+                    print(f"➡️ Resultado en decimal: {binario_a_decimal(resultado)}")
 
-    def a_decimal():
-        binario = entrada.get()
-        if not es_binario(binario):
-            messagebox.showerror("Error", "Número binario inválido")
-            return
-        resultado = binario_a_decimal(binario)
-        agregar_historial(f"{binario} (bin) = {resultado} (dec)")
-        entrada.delete(0, tk.END)
-        entrada.insert(0, str(resultado))
+        repetir = input("¿Desea realizar otra operación? (si/no): ").strip().lower()
+        if repetir != 's':
+            print("\n¡Gracias por usar la calculadora binaria!")
+            break
 
-    botones = [
-        ('1', 1, 0), ('0', 1, 1), ('+', 1, 2), ('-', 1, 3),
-        ('*', 2, 0), ('C', 2, 1), ('=', 2, 2), ('a Dec', 2, 3)
-    ]
 
-    for (texto, fila, col) in botones:
-        if texto == '=':
-            cmd = operar
-            color = "#4CAF50"
-        elif texto == 'C':
-            cmd = limpiar
-            color = "#f44336"
-        elif texto == 'a Dec':
-            cmd = a_decimal
-            color = "#2196F3"
-        else:
-            cmd = lambda t=texto: agregar_texto(t)
-            color = "#e0e0e0"
-
-        tk.Button(ventana, text=texto, font=("Arial", 14), bg=color, activebackground="#d0d0d0",
-                  command=cmd, height=2)\
-            .grid(row=fila, column=col, sticky="nsew", padx=5, pady=5)
-
-    for i in range(5):
-        ventana.grid_rowconfigure(i, weight=1)
-    for j in range(4):
-        ventana.grid_columnconfigure(j, weight=1)
-
-# ==== CALCULADORA DECIMAL ====
-
-def abrir_calculadora_decimal():
-    ventana = tk.Toplevel()
-    ventana.title("Calculadora Decimal")
-    ventana.geometry("400x600")
-    ventana.configure(bg="#f9f9f9")
-
-    entrada = tk.Entry(ventana, font=("Consolas", 20), justify="right", bd=8)
-    entrada.grid(row=0, column=0, columnspan=4, padx=10, pady=15, sticky="nsew")
-
-    historial = scrolledtext.ScrolledText(ventana, width=40, height=10, font=("Consolas", 12), state="disabled", bg="#ffffff")
-    historial.grid(row=6, column=0, columnspan=4, padx=10, pady=10)
-
-    def limpiar():
-        entrada.delete(0, tk.END)
-
-    def agregar_texto(texto):
-        entrada.insert(tk.END, texto)
-
-    def agregar_historial(texto):
-        historial.configure(state="normal")
-        historial.insert(tk.END, texto + "\n")
-        historial.configure(state="disabled")
-        historial.see(tk.END)
-
-    def calcular():
-        try:
-            expr = entrada.get()
-            resultado = eval(expr)
-            agregar_historial(f"{expr} = {resultado}")
-            entrada.delete(0, tk.END)
-            entrada.insert(0, str(resultado))
-        except:
-            messagebox.showerror("Error", "Expresión no válida")
-
-    def convertir_a_binario():
-        try:
-            numero = int(entrada.get())
-            if numero < 0:
-                raise ValueError
-            binario = decimal_a_binario(numero)
-            agregar_historial(f"{numero} (dec) = {binario} (bin)")
-            entrada.delete(0, tk.END)
-            entrada.insert(0, binario)
-        except:
-            messagebox.showerror("Error", "Ingrese un número decimal válido")
-
-    botones = [
-        ('7', 1, 0), ('8', 1, 1), ('9', 1, 2), ('/', 1, 3),
-        ('4', 2, 0), ('5', 2, 1), ('6', 2, 2), ('*', 2, 3),
-        ('1', 3, 0), ('2', 3, 1), ('3', 3, 2), ('-', 3, 3),
-        ('C', 4, 0), ('0', 4, 1), ('=', 4, 2), ('+', 4, 3),
-        ('a Bin', 5, 0, 4)
-    ]
-
-    for boton in botones:
-        texto = boton[0]
-        fila = boton[1]
-        col = boton[2]
-        colspan = boton[3] if len(boton) == 4 else 1
-
-        if texto == '=':
-            cmd = calcular
-            color = "#4CAF50"
-        elif texto == 'C':
-            cmd = limpiar
-            color = "#f44336"
-        elif texto == 'a Bin':
-            cmd = convertir_a_binario
-            color = "#2196F3"
-        else:
-            cmd = lambda t=texto: agregar_texto(t)
-            color = "#e0e0e0"
-
-        tk.Button(ventana, text=texto, font=("Arial", 14), bg=color, activebackground="#d0d0d0",
-                  command=cmd, height=2)\
-            .grid(row=fila, column=col, columnspan=colspan, sticky="nsew", padx=5, pady=5)
-
-    for i in range(7):
-        ventana.grid_rowconfigure(i, weight=1)
-    for j in range(4):
-        ventana.grid_columnconfigure(j, weight=1)
-
-# ==== MENÚ PRINCIPAL ====
-
-root = tk.Tk()
-root.title("Calculadora Principal")
-root.geometry("320x240")
-root.configure(bg="#ffffff")
-root.resizable(False, False)
-
-tk.Label(root, text="Elige tipo de calculadora", font=("Arial", 14), bg="#ffffff").pack(pady=20)
-
-tk.Button(root, text="Calculadora Binaria", font=("Arial", 12), width=25,
-          bg="#bbdefb", activebackground="#90caf9", command=abrir_calculadora_binaria).pack(pady=5)
-
-tk.Button(root, text="Calculadora Decimal", font=("Arial", 12), width=25,
-          bg="#c8e6c9", activebackground="#a5d6a7", command=abrir_calculadora_decimal).pack(pady=5)
-
-tk.Button(root, text="Salir", font=("Arial", 12), width=25,
-          bg="#ffcdd2", activebackground="#ef9a9a", command=root.destroy).pack(pady=10)
-
-root.mainloop()
+# Ejecutar la calculadora
+if __name__ == "__main__":
+    calculadora_binaria()
